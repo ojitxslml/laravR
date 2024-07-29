@@ -1,68 +1,77 @@
-import React, {useEffect, useState} from 'react'
-import axios from 'axios'
-import {Link} from 'react-router-dom'
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { Link } from 'react-router-dom';
+import { Table, Button } from 'antd';
 
 const ShowProducts = () => {
+  const [products, setProducts] = useState([]);
 
-const [products, setProducts] = useState([]);
+  const endpoint = 'http://localhost:8000/api';
 
-const endpoint = 'http://localhost:8000/api'
+  useEffect(() => {
+    getAllProducts();
+  }, []);
 
-useEffect(() => {
-getAllProducts()    
-}, []);
-
-const getAllProducts = async () => {
-   try {
+  const getAllProducts = async () => {
+    try {
       const response = await axios.get(`${endpoint}/products`);
-      setProducts(response.data);  // Set products state with array of data
-   } catch (error) {
+      setProducts(response.data); // Asegúrate de que response.data es un array de objetos
+    } catch (error) {
       console.error('Error fetching products:', error);
-   }
-}
+    }
+  };
 
-const deleteProduct = async (id) => {  // Ensure deleteProduct accepts id parameter
-   try {
+  const deleteProduct = async (id) => {
+    try {
       await axios.delete(`${endpoint}/product/${id}`);
-      getAllProducts();  // Refresh products after delete
-   } catch (error) {
+      getAllProducts(); // Refrescar los productos después de eliminar
+    } catch (error) {
       console.error('Error deleting product:', error);
-   }
-}
+    }
+  };
 
+  const columns = [
+    {
+      title: 'Description',
+      dataIndex: 'description', // Asegúrate de que esto coincide con la clave en los datos de tu API
+      key: 'description',
+    },
+    {
+      title: 'Price',
+      dataIndex: 'price', // Asegúrate de que esto coincide con la clave en los datos de tu API
+      key: 'price',
+    },
+    {
+      title: 'Stock',
+      dataIndex: 'stock', // Asegúrate de que esto coincide con la clave en los datos de tu API
+      key: 'stock',
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (text, record) => (
+        <span>
+          <Link to={`/edit/${record.id}`} className='btn btn-warning' style={{ marginRight: 8 }}>
+            Edit
+          </Link>
+          <Button type="danger" onClick={() => deleteProduct(record.id)}>
+            Delete
+          </Button>
+        </span>
+      ),
+    },
+  ];
 
   return (
     <div>
-        
-       <div className='d-grid gap-2'>
-        <Link to="/create" className='btn btn-success btn-lg mt-2 text-white'>Create</Link>
-       </div>
-       <table className='table table-stripped'>
-        <thead className='bg-primary text-white'>
-            <tr>
-                <th>Description</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            { products.map( (product) =>(
-                    <tr key={product.id}>
-                        <td>{product.description}</td>
-                        <td>{product.price}</td>
-                        <td>{product.stock}</td>
-                        <td>
-                            <Link to={`/edit/${product.id}`} className='btn btn-warning'>Edit</Link>
-                            <button className="btn btn-danger" onClick={() => deleteProduct(product.id)} >Delete</button>
-                        </td>
-                    </tr>
-                ))
-            }
-        </tbody>
-       </table>
+      <div className='d-grid gap-2'>
+        <Link to="/create" className='btn btn-success btn-lg mt-2 text-white'>
+          Create
+        </Link>
+      </div>
+      <Table dataSource={products} columns={columns} rowKey="id" />
     </div>
-  )
-}
+  );
+};
 
-export default ShowProducts
+export default ShowProducts;

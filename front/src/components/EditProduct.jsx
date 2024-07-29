@@ -1,69 +1,77 @@
-import axios from 'axios'
-import React, { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect} from 'react';
+import axios from 'axios';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Form, Input, InputNumber, Button } from 'antd';
 
-const endpoint = 'http://localhost:8000/api/product/'
+const endpoint = 'http://localhost:8000/api/product/';
 
 const EditProduct = () => {
-    const [description, setDescription] = useState('');
-    const [price , setPrice ] = useState(0);
-    const [stock , setStock ] = useState(0);
-    const {id} = useParams()
-    const navigate = useNavigate();
-    const update = async(e) =>{
-        e.preventDefault()
-        await axios.put(`${endpoint}${id}`, {
-            description: description,
-            price: price,
-            stock: stock
-        })
-        navigate('/')
-    }
+  const [form] = Form.useForm();
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-useEffect(() => {
-    const getProudctById = async () => {
-        try {
-            const response = await axios.get(`${endpoint}${id}`);
-            setDescription(response.data.description || '');
-            setPrice(response.data.price || 0);
-            setStock(response.data.stock || 0);
-        } catch (error) {
-            console.error('Error fetching product:', error);
-        }
-    }
-    getProudctById();
-}, []);
+  useEffect(() => {
+    const getProductById = async () => {
+      try {
+        const response = await axios.get(`${endpoint}${id}`);
+        form.setFieldsValue({
+          description: response.data.description || '',
+          price: response.data.price || 0,
+          stock: response.data.stock || 0,
+        });
+      } catch (error) {
+        console.error('Error fetching product:', error);
+      }
+    };
+    getProductById();
+  }, [id, form]);
 
+  const updateProduct = async (values) => {
+    try {
+      await axios.put(`${endpoint}${id}`, values);
+      navigate('/');
+    } catch (error) {
+      console.error('Error updating product:', error);
+    }
+  };
 
   return (
     <div>
-    <h3>Edit Product</h3>
-    <form onSubmit={update}>
-        <div className='mb-3'>
-            <label className='form-label'>Description</label>
-            <input value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            type='text'
-            className='form-control' />
-        </div>
-        <div className='mb-3'>
-            <label className='form-label'>Precio</label>
-            <input value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            type='text'
-            className='form-control' />
-        </div>
-        <div className='mb-3'>
-            <label className='form-label'>Stock</label>
-            <input value={stock}
-            onChange={(e) => setStock(e.target.value)}
-            type='number'
-            className='form-control' />
-        </div>
-        <button type='submit' className='btn btn-primary'>update</button>
-    </form>
-</div>
-  )
-}
+      <h3>Edit Product</h3>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={updateProduct}
+      >
+        <Form.Item
+          label="Description"
+          name="description"
+          rules={[{ required: true, message: 'Please input the description!' }]}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          label="Price"
+          name="price"
+          rules={[{ required: true, message: 'Please input the price!' }]}
+        >
+          <InputNumber min={0} />
+        </Form.Item>
+        <Form.Item
+          label="Stock"
+          name="stock"
+          rules={[{ required: true, message: 'Please input the stock!' }]}
+        >
+          <InputNumber min={0} />
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit">
+            Update
+          </Button>
+        </Form.Item>
+      </Form>
+    </div>
+  );
+};
 
-export default EditProduct
+export default EditProduct;
